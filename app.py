@@ -1,28 +1,34 @@
-from flask import Flask, request, jsonify
-import subprocess
+from flask import Flask, request
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Autorise Webflow à envoyer les données (CORS)
 
-@app.route('/')
-def index():
-    return "✅ BotFX API est en ligne"
-
-@app.route('/launch-bot', methods=['POST'])
-def launch_bot():
-    data = request.get_json()
+@app.route('/api/enregistrer', methods=['POST'])
+def enregistrer_infos():
     try:
-        cmd = [
-            'python3', 'bot.py',
-            f"--broker_url={data['broker_url']}",
-            f"--api_key={data['api_key']}",
-            f"--email={data['email']}",
-            f"--password={data['password']}",
-            f"--symbol={data.get('symbol', 'EURUSD')}"
-        ]
-        subprocess.Popen(cmd)
-        return jsonify({'status': '✅ Bot lancé avec succès'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        # Récupération des données envoyées par Webflow (form-data)
+        api_key = request.form.get('api_key')
+        tracker_url = request.form.get('tracker_url')
+        email = request.form.get('email')
+        password = request.form.get('password')
 
+        # Debug dans les logs Render
+        print("Données reçues depuis Webflow :")
+        print(f"API Key : {api_key}")
+        print(f"Tracker URL : {tracker_url}")
+        print(f"Email : {email}")
+        print(f"Mot de passe : {password}")
+
+        # Ici, tu peux enregistrer en base de données, envoyer au bot, etc.
+
+        return "Données reçues avec succès ✅", 200
+
+    except Exception as e:
+        print(f"Erreur : {str(e)}")
+        return f"Erreur serveur : {str(e)}", 500
+
+# Exécution si lancé localement (Render l’ignore)
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000)
+    app.run(debug=True)
+
